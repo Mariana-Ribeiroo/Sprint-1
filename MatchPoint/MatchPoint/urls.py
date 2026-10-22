@@ -17,16 +17,18 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from django.urls.conf import include
+
 from core import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.home, name="home"),
     path("editar-usuario/", views.editar_usuario, name="editar_usuario"),
-    path("login/", views.login_usuario, name="login"),
     path("cadastro/", views.cadastro_usuario, name="cadastro"),
     path("usuarios/", views.lista_de_usuarios, name="lista_de_usuarios"),
-    path("remover-usuario/", views.remover_usuario,name="remover_usuario"),
-        path("encontrar-parceiros/", views.encontrar_parceiros, name="encontrar_parceiros"),
+    path("remover-usuario/", views.remover_usuario, name="remover_usuario"),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("usuario/", include("usuario.urls")),
 ]
 

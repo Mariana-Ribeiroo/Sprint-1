@@ -27,10 +27,17 @@
         </nav>
 
         <div class="home-actions">
-            <a href="{% url 'login' %}" class="home-login">Entrar</a>
-            <a href="{% url 'cadastro' %}" class="home-signup">
-                Criar conta <span aria-hidden="true">↗</span>
-            </a>
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Sair</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="home-login">Entrar</a>
+                <a href="{% url 'cadastro' %}" class="home-signup">
+                    Criar conta <span aria-hidden="true">↗</span>
+                </a>
+            {% endif %}
         </div>
     </header>
 

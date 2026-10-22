@@ -25,12 +25,15 @@ SECRET_KEY = "django-insecure-wi_u)4-ptv=8a6355li8i&1a=z=t9em#uc6a6e2qcokmyt9-6e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://silver-space-pancake-jjj45x4pw54vfjqx-8000.app.github.dev",
-     "https://localhost:8000",
+    "https://localhost:8000",
+    "http://localhost:8000",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
@@ -42,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
+    "usuario",
 ]
 
 MIDDLEWARE = [
@@ -128,10 +132,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 LOGIN_URL = "/admin/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"

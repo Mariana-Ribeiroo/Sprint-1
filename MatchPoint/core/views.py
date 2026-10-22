@@ -1,3 +1,4 @@
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -12,10 +13,7 @@ from .models import PerfilUsuario
 @login_required
 def editar_usuario(request):
     usuario = request.user
-
-    perfil, criado = PerfilUsuario.objects.get_or_create(
-        usuario=usuario
-    )
+    perfil, criado = PerfilUsuario.objects.get_or_create(usuario=usuario)
 
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
@@ -29,7 +27,6 @@ def editar_usuario(request):
             messages.error(request, "Este e-mail já está em uso.")
         else:
             partes_nome = nome.split(maxsplit=1)
-
             usuario.first_name = partes_nome[0]
             usuario.last_name = partes_nome[1] if len(partes_nome) > 1 else ""
             usuario.email = email
@@ -46,15 +43,10 @@ def editar_usuario(request):
             messages.success(request, "Perfil atualizado com sucesso!")
             return redirect("editar_usuario")
 
-    return render(
-        request,
-        "editar_usuario.html",
-        {
-            "usuario": usuario,
-            "foto": perfil.foto,
-        },
-    )
-
+    return render(request, "editar_usuario.html", {
+        "usuario": usuario,
+        "foto": perfil.foto,
+    })
 
 
 def login_usuario(request):
@@ -85,7 +77,6 @@ def login_usuario(request):
     return render(request, "login.html", {"erro": erro})
 
 
-    
 def cadastro_usuario(request):
     erro = ""
 
@@ -113,7 +104,6 @@ def cadastro_usuario(request):
                         first_name=partes_nome[0],
                         last_name=partes_nome[1] if len(partes_nome) > 1 else "",
                     )
-
                     PerfilUsuario.objects.create(usuario=usuario)
 
                 login(request, usuario)
@@ -124,25 +114,18 @@ def cadastro_usuario(request):
 
     return render(request, "cadastro.html", {"erro": erro})
 
+
 def home(request):
     return render(request, "FigmaTela.html")
+
 
 @login_required
 def lista_de_usuarios(request):
     usuarios = User.objects.all().order_by("first_name")
+    return render(request, "lista_de_usuarios.html", {
+        "usuarios": usuarios,
+    })
 
-    return render(
-        request,
-        "lista_de_usuarios.html",
-        {"usuarios": usuarios},
-    )
-
-
-@login_required
-def remover_usuario(request):
-    if request.method == "POST":
-        request.user.delete()
-        return redirect("home")
 
 @login_required
 def remover_usuario(request):
