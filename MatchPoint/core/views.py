@@ -21,7 +21,7 @@ def editar_usuario(request):
         foto = request.POST.get("foto", "").strip()
         senha = request.POST.get("senha", "")
 
-        if not nome or not email:
+        if not nome or not email: 
             messages.error(request, "Preencha o nome e o e-mail.")
         elif User.objects.filter(email=email).exclude(pk=usuario.pk).exists():
             messages.error(request, "Este e-mail já está em uso.")
