@@ -136,13 +136,6 @@ def lista_de_usuarios(request):
         {"usuarios": usuarios},
     )
 
-
-@login_required
-def remover_usuario(request):
-    if request.method == "POST":
-        request.user.delete()
-        return redirect("home")
-
 @login_required
 def remover_usuario(request):
     if request.method == "POST":
@@ -152,24 +145,34 @@ def remover_usuario(request):
     return render(request, "remover_usuario.html")
 
 
+@login_required
 def encontrar_parceiros(request):
-
-    # Pegar os filtros escolhidos pelo usuario
+    # Filtros escolhidos pelo usuário
     esporte_id = request.GET.get("esporte", "")
     nivel = request.GET.get("nivel", "")
+    search_query = request.GET.get("search", "").strip()
 
-    # Buscar jogadores no banco de dados
-    jogadores = PerfilEsporte.objects.all()
+    # Buscar perfis de esporte
+    jogadores = PerfilEsporte.objects.select_related(
+        "usuario", "esporte"
+    ).exclude(usuario=request.user)
 
     # Filtrar por esporte
     if esporte_id.isdigit():
         jogadores = jogadores.filter(esporte_id=int(esporte_id))
 
-    # Filtrar por nivel
+    # Filtrar por nível
     if nivel in ["Iniciante", "Intermediário", "Avançado"]:
         jogadores = jogadores.filter(nivel=nivel)
 
-    # Lista de esportes para o filtro
+    # Buscar pelo nome
+    if search_query:
+        jogadores = jogadores.filter(
+            usuario__first_name__icontains=search_query
+        ) | jogadores.filter(
+            usuario__last_name__icontains=search_query
+        )
+
     esportes = Esporte.objects.all().order_by("nome")
 
     return render(request, "encontrar_parceiros.html", {
@@ -177,34 +180,77 @@ def encontrar_parceiros(request):
         "esportes": esportes,
         "esporte_selecionado": esporte_id,
         "nivel_selecionado": nivel,
+        "search_query": search_query,
     })
 
 
 @login_required
 def demonstrar_interesse(request, usuario_id):
-
     if request.method == "POST":
-
-        # Encontrar o jogador escolhido
-        jogador = User.objects.filter(id=usuario_id).first()
+        jogador = User.objects.filter(pk=usuario_id).first()
 
         if jogador is None:
             messages.error(request, "Jogador não encontrado.")
-
         elif jogador == request.user:
-            messages.error(request, "Você não pode demonstrar interesse em si mesmo.")
-
+            messages.error(
+                request,
+                "Você não pode demonstrar interesse em si mesmo."
+            )
         else:
-            # Registrar o interesse no banco
             interesse, criado = Interesse.objects.get_or_create(
                 usuario_origem=request.user,
-                usuario_destino=jogador
+                usuario_destino=jogador,
             )
 
             if criado:
                 messages.success(request, "Interesse enviado!")
             else:
-                messages.info(request, "Você já demonstrou interesse neste jogador.")
+                messages.info(
+                    request,
+                    "Você já demonstrou interesse neste jogador."
+                )
 
     return redirect("encontrar_parceiros")
+
+
+@login_required
+def agendar_quadras(request):
+    quadras = [
+        {
+            "nome": "Rede do Posto 9",
+            "esporte": "Vôlei de praia",
+            "detalhes": "Dupla · 2 de 4 vagas · Todos os níveis",
+            "horario": "Hoje · 17:00",
+        },
+        {
+            "nome": "Quadra de Areia Copacabana",
+            "esporte": "Beach tennis",
+            "detalhes": "Dupla · 1 de 2 vagas · Intermediário",
+            "horario": "Amanhã · 08:00",
+        },
+        {
+            "nome": "Arena Leblon",
+            "esporte": "Vôlei de praia",
+            "detalhes": "4x4 · 3 de 8 vagas · Iniciante",
+            "horario": "Sáb · 09:30",
+        },
+        {
+            "nome": "Quadra de Saibro 3",
+            "esporte": "Tênis",
+            "detalhes": "Individual · 1 de 2 vagas · Intermediário",
+            "horario": "Dom · 10:00",
+        },
+        {
+            "nome": "Arena Central",
+            "esporte": "Futsal",
+            "detalhes": "5x5 · 7 de 10 vagas · Todos os níveis",
+            "horario": "Sáb · 20:00",
+        },
+    ]
+
+    return render(
+        request,
+        "agendar_quadras.html",
+        {"quadras": quadras},
+    )
 
