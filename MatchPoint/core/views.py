@@ -6,8 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.db import IntegrityError, transaction
 
-from .models import PerfilUsuario
-
+from .models import PerfilUsuario, Esporte, PerfilEsporte, Interesse
 
 @login_required
 def editar_usuario(request):
@@ -137,13 +136,6 @@ def lista_de_usuarios(request):
         {"usuarios": usuarios},
     )
 
-
-@login_required
-def remover_usuario(request):
-    if request.method == "POST":
-        request.user.delete()
-        return redirect("home")
-
 @login_required
 def remover_usuario(request):
     if request.method == "POST":
@@ -151,68 +143,114 @@ def remover_usuario(request):
         return redirect("home")
 
     return render(request, "remover_usuario.html")
-    @login_required
+
+
+@login_required
 def encontrar_parceiros(request):
-    '''
-    Esta função busca os jogadores cadastrados no banco de dados.
-    Ela utiliza a página encontrar_parceiros.html para exibir os jogadores.
-    Se o formulário de busca for enviado, mostra apenas os jogadores
-    cujo nome contém o texto pesquisado.
-    '''
-    if request.method == 'GET':
-        parceiros = User.objects.all()
-        contexto = {
-            'parceiros': parceiros,
-        }
-    else:
-        search_query = request.POST.get('search')
-        parceiros = User.objects.filter(first_name__icontains=search_query)
-        contexto = {
-            'search_query': search_query,   # o texto pesquisado
-            'parceiros': parceiros,         # os resultados da pesquisa
-        }
-    return render(request, 'encontrar_parceiros.html', contexto)
-    @login_required
+    # Filtros escolhidos pelo usuário
+    esporte_id = request.GET.get("esporte", "")
+    nivel = request.GET.get("nivel", "")
+    search_query = request.GET.get("search", "").strip()
+
+    # Buscar perfis de esporte
+    jogadores = PerfilEsporte.objects.select_related(
+        "usuario", "esporte"
+    ).exclude(usuario=request.user)
+
+    # Filtrar por esporte
+    if esporte_id.isdigit():
+        jogadores = jogadores.filter(esporte_id=int(esporte_id))
+
+    # Filtrar por nível
+    if nivel in ["Iniciante", "Intermediário", "Avançado"]:
+        jogadores = jogadores.filter(nivel=nivel)
+
+    # Buscar pelo nome
+    if search_query:
+        jogadores = jogadores.filter(
+            usuario__first_name__icontains=search_query
+        ) | jogadores.filter(
+            usuario__last_name__icontains=search_query
+        )
+
+    esportes = Esporte.objects.all().order_by("nome")
+
+    return render(request, "encontrar_parceiros.html", {
+        "jogadores": jogadores,
+        "esportes": esportes,
+        "esporte_selecionado": esporte_id,
+        "nivel_selecionado": nivel,
+        "search_query": search_query,
+    })
+
+
+@login_required
+def demonstrar_interesse(request, usuario_id):
+    if request.method == "POST":
+        jogador = User.objects.filter(pk=usuario_id).first()
+
+        if jogador is None:
+            messages.error(request, "Jogador não encontrado.")
+        elif jogador == request.user:
+            messages.error(
+                request,
+                "Você não pode demonstrar interesse em si mesmo."
+            )
+        else:
+            interesse, criado = Interesse.objects.get_or_create(
+                usuario_origem=request.user,
+                usuario_destino=jogador,
+            )
+
+            if criado:
+                messages.success(request, "Interesse enviado!")
+            else:
+                messages.info(
+                    request,
+                    "Você já demonstrou interesse neste jogador."
+                )
+
+    return redirect("encontrar_parceiros")
+
+
+@login_required
 def agendar_quadras(request):
-    '''
-    Esta função exibe as quadras disponíveis para agendamento.
-    Por enquanto os dados são de exemplo, porque ainda não existe
-    uma tabela de quadras no banco de dados.
-    Ela utiliza a página agendar_quadras.html para exibir as quadras.
-    '''
     quadras = [
         {
-            'nome': 'Rede do Posto 9',
-            'esporte': 'Vôlei de praia',
-            'detalhes': 'Dupla · 2 de 4 vagas · Todos os níveis',
-            'horario': 'Hoje · 17:00',
+            "nome": "Rede do Posto 9",
+            "esporte": "Vôlei de praia",
+            "detalhes": "Dupla · 2 de 4 vagas · Todos os níveis",
+            "horario": "Hoje · 17:00",
         },
         {
-            'nome': 'Quadra de Areia Copacabana',
-            'esporte': 'Beach tennis',
-            'detalhes': 'Dupla · 1 de 2 vagas · Intermediário',
-            'horario': 'Amanhã · 08:00',
+            "nome": "Quadra de Areia Copacabana",
+            "esporte": "Beach tennis",
+            "detalhes": "Dupla · 1 de 2 vagas · Intermediário",
+            "horario": "Amanhã · 08:00",
         },
         {
-            'nome': 'Arena Leblon',
-            'esporte': 'Vôlei de praia',
-            'detalhes': '4x4 · 3 de 8 vagas · Iniciante',
-            'horario': 'Sáb · 09:30',
+            "nome": "Arena Leblon",
+            "esporte": "Vôlei de praia",
+            "detalhes": "4x4 · 3 de 8 vagas · Iniciante",
+            "horario": "Sáb · 09:30",
         },
         {
-            'nome': 'Quadra de Saibro 3',
-            'esporte': 'Tênis',
-            'detalhes': 'Individual · 1 de 2 vagas · Intermediário',
-            'horario': 'Dom · 10:00',
+            "nome": "Quadra de Saibro 3",
+            "esporte": "Tênis",
+            "detalhes": "Individual · 1 de 2 vagas · Intermediário",
+            "horario": "Dom · 10:00",
         },
         {
-            'nome': 'Arena Central',
-            'esporte': 'Futsal',
-            'detalhes': '5x5 · 7 de 10 vagas · Todos os níveis',
-            'horario': 'Sáb · 20:00',
+            "nome": "Arena Central",
+            "esporte": "Futsal",
+            "detalhes": "5x5 · 7 de 10 vagas · Todos os níveis",
+            "horario": "Sáb · 20:00",
         },
     ]
-    contexto = {
-        'quadras': quadras,
-    }
-    return render(request, 'agendar_quadras.html', contexto)
+
+    return render(
+        request,
+        "agendar_quadras.html",
+        {"quadras": quadras},
+    )
+

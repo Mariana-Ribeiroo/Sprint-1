@@ -4,15 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>MatchPoint — Encontrar Parceiros</title>
-
     <link rel="stylesheet" href="{% static 'estilo.css' %}">
     <link rel="stylesheet" href="{% static 'parceiros.css' %}">
 </head>
 
 <body class="parceiros-page">
-
     <header class="parceiros-navbar">
         <a href="{% url 'home' %}" class="parceiros-logo">
             match<span>point</span><b>.</b>
@@ -26,53 +23,79 @@
     </header>
 
     <main class="parceiros-main">
-
         <section class="parceiros-intro">
             <span class="parceiros-eyebrow">COMUNIDADE</span>
-
             <h1>Encontrar Parceiros<span>.</span></h1>
-
-            <p>Veja perto de você quem está procurando jogar em times ou duplas.</p>
+            <p>Encontre pessoas para praticar os esportes que você gosta.</p>
         </section>
 
-        <form action="" method="post" class="parceiros-filtros">
-            {% csrf_token %}
-            <input type="text" name="search" placeholder="Buscar parceiro..." value="{{ search_query }}">
+        {% if messages %}
+            {% for mensagem in messages %}
+                <p>{{ mensagem }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form method="get" class="parceiros-filtros">
+            <input
+                type="text"
+                name="search"
+                placeholder="Buscar por nome..."
+                value="{{ search_query }}"
+            >
+
+            <select name="esporte">
+                <option value="">Todos os esportes</option>
+                {% for esporte in esportes %}
+                    <option value="{{ esporte.id }}"
+                        {% if esporte_selecionado == esporte.id|stringformat:"s" %}selected{% endif %}>
+                        {{ esporte.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="nivel">
+                <option value="">Todos os níveis</option>
+                <option value="Iniciante" {% if nivel_selecionado == "Iniciante" %}selected{% endif %}>Iniciante</option>
+                <option value="Intermediário" {% if nivel_selecionado == "Intermediário" %}selected{% endif %}>Intermediário</option>
+                <option value="Avançado" {% if nivel_selecionado == "Avançado" %}selected{% endif %}>Avançado</option>
+            </select>
+
             <button type="submit" class="parceiros-botao">Buscar</button>
+            <a href="{% url 'encontrar_parceiros' %}">Limpar filtros</a>
         </form>
 
         <section class="parceiros-grade">
-            {% for parceiro in parceiros %}
-                {% if parceiro != request.user %}
-                    <article class="parceiro-card">
-                        <div class="parceiro-topo">
-                            <div class="parceiro-avatar">
-                                {% if parceiro.perfil.foto %}
-                                    <img src="{{ parceiro.perfil.foto }}" alt="Foto de {{ parceiro.first_name }}">
-                                {% endif %}
-                            </div>
-
-                            <h3>{{ parceiro.first_name }} {{ parceiro.last_name }}</h3>
+            {% for jogador in jogadores %}
+                <article class="parceiro-card">
+                    <div class="parceiro-topo">
+                        <div class="parceiro-avatar">
+                            <span>MP</span>
                         </div>
 
-                        <div class="parceiro-esportes">
-                            {% for item in parceiro.esportes.all %}
-                                <span class="parceiro-tag">{{ item.esporte.nome }} · {{ item.nivel }}</span>
-                            {% empty %}
-                                <span class="parceiro-vazio">Nenhum esporte informado</span>
-                            {% endfor %}
-                        </div>
-                    </article>
-                {% endif %}
+                        <h3>
+                            {{ jogador.usuario.get_full_name|default:jogador.usuario.username }}
+                        </h3>
+                    </div>
+
+                    <div class="parceiro-esportes">
+                        <span class="parceiro-tag">{{ jogador.esporte.nome }}</span>
+                        <span class="parceiro-tag">{{ jogador.nivel }}</span>
+                    </div>
+
+                    <form method="post" action="{% url 'demonstrar_interesse' jogador.usuario.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="parceiros-botao">
+                            Tenho interesse
+                        </button>
+                    </form>
+                </article>
             {% empty %}
                 <div class="parceiros-vazio-geral">
                     <strong>Nenhum jogador encontrado</strong>
-                    <p>Tente buscar por outro nome.</p>
+                    <p>Tente alterar os filtros de busca.</p>
                 </div>
             {% endfor %}
         </section>
-
     </main>
-
 </body>
 </html>
