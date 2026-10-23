@@ -6,8 +6,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.db import IntegrityError, transaction
+from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import PerfilUsuario
+from .models import PerfilUsuario, Esporte, PerfilEsporte, Interesse
 
 
 @login_required
@@ -134,3 +135,62 @@ def remover_usuario(request):
         return redirect("home")
 
     return render(request, "remover_usuario.html")
+
+
+@login_required
+def encontrar_parceiros(request):
+    esporte_selecionado = request.GET.get("esporte", "")
+    nivel_selecionado = request.GET.get("nivel", "")
+    search_query = request.GET.get("search", "").strip()
+
+    jogadores = (
+        PerfilEsporte.objects
+        .select_related("usuario", "esporte")
+        .exclude(usuario=request.user)
+    )
+
+    if esporte_selecionado:
+        jogadores = jogadores.filter(esporte_id=esporte_selecionado)
+
+    if nivel_selecionado:
+        jogadores = jogadores.filter(nivel=nivel_selecionado)
+
+    if search_query:
+        jogadores = jogadores.filter(
+            usuario__first_name__icontains=search_query
+        ) | jogadores.filter(
+            usuario__last_name__icontains=search_query
+        ) | jogadores.filter(
+            usuario__username__icontains=search_query
+        )
+
+    return render(request, "encontrar_parceiros.html", {
+        "jogadores": jogadores,
+        "esportes": Esporte.objects.all(),
+        "esporte_selecionado": esporte_selecionado,
+        "nivel_selecionado": nivel_selecionado,
+        "search_query": search_query,
+    })
+
+
+@login_required
+def demonstrar_interesse(request, usuario_id):
+    if request.method != "POST":
+        return redirect("encontrar_parceiros")
+
+    jogador = get_object_or_404(User, pk=usuario_id)
+
+    if jogador == request.user:
+        messages.error(request, "Você não pode demonstrar interesse em si mesmo.")
+    else:
+        _, criado = Interesse.objects.get_or_create(
+            usuario_origem=request.user,
+            usuario_destino=jogador,
+        )
+
+        if criado:
+            messages.success(request, "Interesse demonstrado com sucesso!")
+        else:
+            messages.info(request, "Você já demonstrou interesse nessa pessoa.")
+
+    return redirect("encontrar_parceiros")
