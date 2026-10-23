@@ -6,8 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.db import IntegrityError, transaction
 
-from .models import PerfilUsuario
-
+from .models import PerfilUsuario, Esporte, PerfilEsporte, Interesse
 
 @login_required
 def editar_usuario(request):
@@ -151,3 +150,61 @@ def remover_usuario(request):
         return redirect("home")
 
     return render(request, "remover_usuario.html")
+
+
+def encontrar_parceiros(request):
+
+    # Pegar os filtros escolhidos pelo usuario
+    esporte_id = request.GET.get("esporte", "")
+    nivel = request.GET.get("nivel", "")
+
+    # Buscar jogadores no banco de dados
+    jogadores = PerfilEsporte.objects.all()
+
+    # Filtrar por esporte
+    if esporte_id.isdigit():
+        jogadores = jogadores.filter(esporte_id=int(esporte_id))
+
+    # Filtrar por nivel
+    if nivel in ["Iniciante", "Intermediário", "Avançado"]:
+        jogadores = jogadores.filter(nivel=nivel)
+
+    # Lista de esportes para o filtro
+    esportes = Esporte.objects.all().order_by("nome")
+
+    return render(request, "encontrar_parceiros.html", {
+        "jogadores": jogadores,
+        "esportes": esportes,
+        "esporte_selecionado": esporte_id,
+        "nivel_selecionado": nivel,
+    })
+
+
+@login_required
+def demonstrar_interesse(request, usuario_id):
+
+    if request.method == "POST":
+
+        # Encontrar o jogador escolhido
+        jogador = User.objects.filter(id=usuario_id).first()
+
+        if jogador is None:
+            messages.error(request, "Jogador não encontrado.")
+
+        elif jogador == request.user:
+            messages.error(request, "Você não pode demonstrar interesse em si mesmo.")
+
+        else:
+            # Registrar o interesse no banco
+            interesse, criado = Interesse.objects.get_or_create(
+                usuario_origem=request.user,
+                usuario_destino=jogador
+            )
+
+            if criado:
+                messages.success(request, "Interesse enviado!")
+            else:
+                messages.info(request, "Você já demonstrou interesse neste jogador.")
+
+    return redirect("encontrar_parceiros")
+

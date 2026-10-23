@@ -27,6 +27,7 @@ urlpatterns = [
     path("cadastro/", views.cadastro_usuario, name="cadastro"),
     path("usuarios/", views.lista_de_usuarios, name="lista_de_usuarios"),
     path("remover-usuario/", views.remover_usuario,name="remover_usuario"),
-        path("encontrar-parceiros/", views.encontrar_parceiros, name="encontrar_parceiros"),
+    path("encontrar-parceiros/", views.encontrar_parceiros, name="encontrar_parceiros"),
+    path("interesse/<int:usuario_id>/", views.demonstrar_interesse, name="demonstrar_interesse"),
 ]
 

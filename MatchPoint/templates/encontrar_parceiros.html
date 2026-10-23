@@ -1,0 +1,103 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encontrar parceiros - MatchPoint</title>
+
+    <link rel="stylesheet" href="{% static 'parceiros.css' %}">
+</head>
+
+<body>
+
+    <header>
+        <a href="{% url 'home' %}" class="logo">
+            match<span>point.</span>
+        </a>
+
+        <a href="{% url 'home' %}">Voltar ao início</a>
+    </header>
+
+    <main>
+        
+        {% if messages %}
+            {% for mensagem in messages %}
+                <p>{{ mensagem }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <h1>Encontre seu parceiro<span>.</span></h1>
+        <p>Conheça pessoas que praticam os mesmos esportes que você!</p>
+
+        <!-- Filtros de pesquisa -->
+        <form method="get">
+
+            <label for="esporte">Esporte:</label>
+            <select name="esporte" id="esporte">
+                <option value="">Todos</option>
+
+                {% for esporte in esportes %}
+                    <option value="{{ esporte.id }}"
+                        {% if esporte_selecionado == esporte.id|stringformat:"s" %}selected{% endif %}>
+                        {{ esporte.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="nivel">Nível:</label>
+            <select name="nivel" id="nivel">
+                <option value="">Todos</option>
+                <option value="Iniciante"
+                    {% if nivel_selecionado == "Iniciante" %}selected{% endif %}>
+                    Iniciante
+                </option>
+                <option value="Intermediário"
+                    {% if nivel_selecionado == "Intermediário" %}selected{% endif %}>
+                    Intermediário
+                </option>
+                <option value="Avançado"
+                    {% if nivel_selecionado == "Avançado" %}selected{% endif %}>
+                    Avançado
+                </option>
+            </select>
+
+            <button type="submit">Buscar</button>
+            <a href="{% url 'encontrar_parceiros' %}">Limpar filtros</a>
+        </form>
+
+        <!-- Lista de jogadores -->
+        <h2>Jogadores encontrados</h2>
+
+        <section class="lista-jogadores">
+
+            {% for jogador in jogadores %}
+
+                <div class="card">
+                    <div class="avatar">MP</div>
+
+                    <h3>
+                        {{ jogador.usuario.get_full_name|default:jogador.usuario.username }}
+                    </h3>
+
+                    <p>Esporte: {{ jogador.esporte.nome }}</p>
+                    <p>Nível: {{ jogador.nivel }}</p>
+                    
+                    <button type="button" onclick="alert('Interesse demonstrado com sucesso!')">
+                        Tenho interesse
+                    </button>
+
+                </div>
+
+            {% empty %}
+
+                <p>Nenhum jogador encontrado.</p>
+
+            {% endfor %}
+
+        </section>
+    </main>
+
+</body>
+</html>
