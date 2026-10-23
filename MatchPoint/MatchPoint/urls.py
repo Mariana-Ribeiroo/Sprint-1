@@ -21,6 +21,8 @@ from django.urls.conf import include
 
 from core import views
 
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.home, name="home"),
@@ -28,7 +30,13 @@ urlpatterns = [
     path("cadastro/", views.cadastro_usuario, name="cadastro"),
     path("usuarios/", views.lista_de_usuarios, name="lista_de_usuarios"),
     path("remover-usuario/", views.remover_usuario, name="remover_usuario"),
+
     path("accounts/", include("django.contrib.auth.urls")),
     path("usuario/", include("usuario.urls")),
+
+    path("encontrar-parceiros/", views.encontrar_parceiros, name="encontrar_parceiros"),
+    path("interesse/<int:usuario_id>/", views.demonstrar_interesse, name="demonstrar_interesse"),
+    path("agendar-quadras/", views.agendar_quadras, name="agendar_quadras"),
 ]
+
 

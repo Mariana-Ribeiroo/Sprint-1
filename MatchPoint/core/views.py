@@ -1,15 +1,12 @@
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import PerfilUsuario, Esporte, PerfilEsporte, Interesse
-
 
 @login_required
 def editar_usuario(request):
@@ -137,6 +134,7 @@ def remover_usuario(request):
     return render(request, "remover_usuario.html")
 
 
+
 @login_required
 def encontrar_parceiros(request):
     esporte_selecionado = request.GET.get("esporte", "")
@@ -149,10 +147,14 @@ def encontrar_parceiros(request):
         .exclude(usuario=request.user)
     )
 
-    if esporte_selecionado:
-        jogadores = jogadores.filter(esporte_id=esporte_selecionado)
+    if esporte_selecionado.isdigit():
+        jogadores = jogadores.filter(
+            esporte_id=int(esporte_selecionado)
+        )
 
-    if nivel_selecionado:
+    if nivel_selecionado in [
+        "Iniciante", "Intermediário", "Avançado"
+    ]:
         jogadores = jogadores.filter(nivel=nivel_selecionado)
 
     if search_query:
@@ -166,7 +168,7 @@ def encontrar_parceiros(request):
 
     return render(request, "encontrar_parceiros.html", {
         "jogadores": jogadores,
-        "esportes": Esporte.objects.all(),
+        "esportes": Esporte.objects.all().order_by("nome"),
         "esporte_selecionado": esporte_selecionado,
         "nivel_selecionado": nivel_selecionado,
         "search_query": search_query,
@@ -181,7 +183,10 @@ def demonstrar_interesse(request, usuario_id):
     jogador = get_object_or_404(User, pk=usuario_id)
 
     if jogador == request.user:
-        messages.error(request, "Você não pode demonstrar interesse em si mesmo.")
+        messages.error(
+            request,
+            "Você não pode demonstrar interesse em si mesmo."
+        )
     else:
         _, criado = Interesse.objects.get_or_create(
             usuario_origem=request.user,
@@ -189,8 +194,56 @@ def demonstrar_interesse(request, usuario_id):
         )
 
         if criado:
-            messages.success(request, "Interesse demonstrado com sucesso!")
+            messages.success(
+                request, "Interesse demonstrado com sucesso!"
+            )
         else:
-            messages.info(request, "Você já demonstrou interesse nessa pessoa.")
+            messages.info(
+                request,
+                "Você já demonstrou interesse nessa pessoa."
+            )
 
     return redirect("encontrar_parceiros")
+
+
+@login_required
+def agendar_quadras(request):
+    quadras = [
+        {
+            "nome": "Rede do Posto 9",
+            "esporte": "Vôlei de praia",
+            "detalhes": "Dupla · 2 de 4 vagas · Todos os níveis",
+            "horario": "Hoje · 17:00",
+        },
+        {
+            "nome": "Quadra de Areia Copacabana",
+            "esporte": "Beach tennis",
+            "detalhes": "Dupla · 1 de 2 vagas · Intermediário",
+            "horario": "Amanhã · 08:00",
+        },
+        {
+            "nome": "Arena Leblon",
+            "esporte": "Vôlei de praia",
+            "detalhes": "4x4 · 3 de 8 vagas · Iniciante",
+            "horario": "Sáb · 09:30",
+        },
+        {
+            "nome": "Quadra de Saibro 3",
+            "esporte": "Tênis",
+            "detalhes": "Individual · 1 de 2 vagas · Intermediário",
+            "horario": "Dom · 10:00",
+        },
+        {
+            "nome": "Arena Central",
+            "esporte": "Futsal",
+            "detalhes": "5x5 · 7 de 10 vagas · Todos os níveis",
+            "horario": "Sáb · 20:00",
+        },
+    ]
+
+    return render(
+        request,
+        "agendar_quadras.html",
+        {"quadras": quadras},
+    )
+
