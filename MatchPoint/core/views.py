@@ -247,3 +247,47 @@ def agendar_quadras(request):
         {"quadras": quadras},
     )
 
+@login_required
+def amistosos(request):
+    '''
+    Esta função exibe os amistosos abertos para participação.
+    Por enquanto os dados são de exemplo, porque ainda não existe
+    uma tabela de amistosos no banco de dados.
+    Ela utiliza a página amistosos.html para exibir os amistosos.
+    '''
+    amistosos = [
+        {
+            'nome': 'Furacão FC x Real Vizinhança',
+            'esporte': 'Futsal',
+            'detalhes': 'Faltam 2 jogadores · Intermediário · Arena Central',
+            'horario': 'Sáb · 16:00',
+        },
+        {
+            'nome': 'Torneio 4x4 de Verão',
+            'esporte': 'Vôlei de praia',
+            'detalhes': '8 times inscritos · Todos os níveis · Posto 9',
+            'horario': 'Dom · 10:00',
+        },
+        {
+            'nome': 'Praia Fest — Duplas',
+            'esporte': 'Vôlei de praia',
+            'detalhes': 'Faltam 3 duplas · Iniciante · Leblon',
+            'horario': 'Sex · 18:00',
+        },
+        {
+            'nome': 'Copa das Duplas Mistas',
+            'esporte': 'Beach tennis',
+            'detalhes': '6 duplas inscritas · Avançado · Copacabana',
+            'horario': 'Qua · 19:30',
+        },
+        {
+            'nome': 'Amistoso Vila Norte',
+            'esporte': 'Futsal',
+            'detalhes': 'Faltam 5 jogadores · Todos os níveis · Ginásio Vila Norte',
+            'horario': 'Ter · 20:30',
+        },
+    ]
+    contexto = {
+        'amistosos': amistosos,
+    }
+    return render(request, 'amistosos.html', contexto)
