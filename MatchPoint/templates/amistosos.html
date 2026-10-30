@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MatchPoint — Amistosos</title>
+
+    <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'parceiros.css' %}">
+    <link rel="stylesheet" href="{% static 'quadras.css' %}">
+</head>
+
+<body class="parceiros-page">
+
+    <header class="parceiros-navbar">
+        <a href="{% url 'home' %}" class="parceiros-logo">
+            match<span>point</span><b>.</b>
+        </a>
+
+        <nav class="parceiros-nav">
+            <a href="{% url 'home' %}">Início</a>
+            <a href="{% url 'encontrar_parceiros' %}">Encontrar parceiros</a>
+            <a href="{% url 'agendar_quadras' %}">Agendar quadras</a>
+            <a href="{% url 'amistosos' %}" class="parceiros-nav-ativo">Amistosos</a>
+            <a href="{% url 'editar_usuario' %}">Meu perfil</a>
+        </nav>
+    </header>
+
+    <main class="parceiros-main">
+
+        <section class="parceiros-intro">
+            <span class="parceiros-eyebrow">COMUNIDADE</span>
+
+            <h1>Amistosos<span>.</span></h1>
+
+            <p>Campeonatos do seu jeito, no seu tempo.</p>
+        </section>
+
+        <section class="parceiros-grade">
+            {% for amistoso in amistosos %}
+                <article class="parceiro-card">
+                    <span class="parceiro-tag">{{ amistoso.esporte }}</span>
+
+                    <h3 class="quadra-nome">{{ amistoso.nome }}</h3>
+
+                    <p class="quadra-detalhes">{{ amistoso.detalhes }}</p>
+
+                    <p class="quadra-horario">{{ amistoso.horario }}</p>
+                </article>
+            {% empty %}
+                <div class="parceiros-vazio-geral">
+                    <strong>Nenhum amistoso aberto</strong>
+                    <p>Volte mais tarde para ver novas partidas.</p>
+                </div>
+            {% endfor %}
+        </section>
+
+    </main>
+
+</body>
+</html>
